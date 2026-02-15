@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+bun.lock
+
+# Environment
+.env
+*.local
+
+# Logs
+*.log
+.server.log
+.server.pid
+
+# Data (generated at runtime)
+data/
+briefs/
+captures/
+
+# OS
+.DS_Store
+Thumbs.db

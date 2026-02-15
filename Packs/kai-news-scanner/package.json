@@ -1,0 +1,16 @@
+{
+  "name": "news-scanner",
+  "version": "1.0.0",
+  "description": "News aggregation and digest generation skill",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/server.ts",
+    "fetch": "bun run Tools/FetchNews.ts"
+  },
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

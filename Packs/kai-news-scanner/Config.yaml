@@ -1,0 +1,55 @@
+# NewsScanner Configuration
+# Customize RSS feeds and topic keywords
+
+topics:
+  tech:
+    keywords:
+      - AI
+      - LLM
+      - machine learning
+      - open source
+      - programming
+      - TypeScript
+      - data engineering
+    feeds:
+      - name: Hacker News
+        url: https://hnrss.org/frontpage
+      - name: Ars Technica
+        url: https://feeds.arstechnica.com/arstechnica/technology-lab
+      - name: TechCrunch
+        url: https://techcrunch.com/feed/
+
+  crypto:
+    keywords:
+      - Bitcoin
+      - BTC
+      - Solana
+      - SOL
+      - cryptocurrency
+      - halal finance
+      - Islamic finance
+    feeds:
+      - name: CoinDesk
+        url: https://www.coindesk.com/arc/outboundfeeds/rss/
+      - name: Bitcoin Magazine
+        url: https://bitcoinmagazine.com/.rss/full/
+      - name: Cointelegraph
+        url: https://cointelegraph.com/rss
+
+  world:
+    keywords:
+      - Muslim world
+      - Middle East
+      - geopolitics
+      - global news
+    feeds:
+      - name: Al Jazeera
+        url: https://www.aljazeera.com/xml/rss/all.xml
+      - name: BBC World
+        url: https://feeds.bbci.co.uk/news/world/rss.xml
+
+# Output preferences
+output:
+  max_items_per_source: 5
+  summary_length: 150
+  include_links: true

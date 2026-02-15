@@ -1,0 +1,21 @@
+{
+  "name": "trend-radar",
+  "version": "1.0.0",
+  "description": "Real-time social media trend discovery dashboard",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/server.ts",
+    "dev": "bun --watch run src/server.ts",
+    "docker:build": "docker build -f docker/Dockerfile -t trendradar:local .",
+    "docker:run": "docker run -d -p 5180:5180 -v trendradar-data:/data --name trendradar trendradar:local",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down"
+  },
+  "dependencies": {
+    "rss-parser": "^3.13.0",
+    "vader-sentiment": "^1.1.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

@@ -1,0 +1,36 @@
+# IchimokuRadar - Docker Compose
+
+services:
+  ichimoku-radar:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: ichimoku-radar
+    ports:
+      - "5181:5181"
+    volumes:
+      # Persist OHLCV data and signal history
+      - ichimoku-data:/app/data
+    environment:
+      - TZ=${TZ:-America/Los_Angeles}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5181/api/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - pai-network
+    labels:
+      - "casaos.name=IchimokuRadar"
+      - "casaos.category=Finance"
+      - "casaos.port.main=5181"
+
+networks:
+  pai-network:
+    external: true
+
+volumes:
+  ichimoku-data:
+    driver: local

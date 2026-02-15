@@ -1,0 +1,9 @@
+node_modules
+.git
+data/
+Reports/
+Workflows/
+Tools/
+docker/
+*.md
+.env

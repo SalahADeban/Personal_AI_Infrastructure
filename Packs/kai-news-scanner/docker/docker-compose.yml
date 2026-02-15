@@ -1,0 +1,15 @@
+services:
+  newsscanner:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: newsscanner
+    ports:
+      - "5182:5182"
+    restart: unless-stopped
+    networks:
+      - pai-network
+
+networks:
+  pai-network:
+    external: true
