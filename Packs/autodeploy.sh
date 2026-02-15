@@ -6,7 +6,7 @@
 set -e
 
 PAI_DIR="${PAI_DIR:-/DATA/AppData/pai}"
-REPO_URL="${REPO_URL:-https://github.com/SalahADeban/PAI.git}"
+REPO_URL="${REPO_URL:-https://github.com/SalahADeban/Personal_AI_Infrastructure.git}"
 BRANCH="${BRANCH:-main}"
 
 cd "$PAI_DIR"
