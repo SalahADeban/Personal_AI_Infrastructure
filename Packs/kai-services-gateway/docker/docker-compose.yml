@@ -1,0 +1,66 @@
+# PAI Services Gateway - Docker Compose
+# For Ubuntu/CasaOS deployment
+
+services:
+  pai-gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: pai-gateway
+    ports:
+      - "4001:4001"
+    volumes:
+      # Mount PAI data directory
+      - pai-data:/data
+      # Optional: Mount host config for live editing
+      # - ../config:/app/config:ro
+    environment:
+      - PAI_DIR=/data
+      - TZ=${TZ:-America/Los_Angeles}
+      # Webhook credentials (from .env file)
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - pai-network
+    labels:
+      # CasaOS labels for UI integration
+      - "casaos.name=PAI Gateway"
+      - "casaos.icon=https://raw.githubusercontent.com/danielmiessler/PAI/main/icon.png"
+      - "casaos.category=Development"
+      - "casaos.port.main=4001"
+      - "casaos.web.port=4001"
+      - "casaos.web.path=/"
+
+  # Optional: IchimokuRadar service
+  # Uncomment if deploying together
+  # ichimoku-radar:
+  #   build:
+  #     context: ../../kai-ichimoku-radar
+  #     dockerfile: docker/Dockerfile
+  #   container_name: ichimoku-radar
+  #   ports:
+  #     - "5181:5181"
+  #   volumes:
+  #     - pai-data:/data
+  #   environment:
+  #     - PAI_DIR=/data
+  #     - TZ=${TZ:-America/Los_Angeles}
+  #   restart: unless-stopped
+  #   networks:
+  #     - pai-network
+
+networks:
+  pai-network:
+    external: true
+
+volumes:
+  pai-data:
+    driver: local

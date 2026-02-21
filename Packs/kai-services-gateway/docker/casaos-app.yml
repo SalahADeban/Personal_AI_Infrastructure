@@ -1,0 +1,61 @@
+# CasaOS App Definition
+# Place in /var/lib/casaos/apps/ or import via CasaOS UI
+
+name: pai-gateway
+title: PAI Services Gateway
+description: Personal AI Infrastructure services - Morning Brief, Daily Review, Quick Capture
+icon: https://raw.githubusercontent.com/danielmiessler/PAI/main/icon.png
+category: Development
+developer: PAI Project
+version: "1.0.0"
+port_map: "4001"
+
+services:
+  pai-gateway:
+    image: pai-gateway:latest
+    build:
+      context: /path/to/PAI/Packs/kai-services-gateway
+      dockerfile: docker/Dockerfile
+    container_name: pai-gateway
+    restart: unless-stopped
+    ports:
+      - target: 4001
+        published: "4001"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /DATA/AppData/pai
+        target: /data
+    environment:
+      PAI_DIR: /data
+      TZ: America/Los_Angeles
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    labels:
+      casaos: "true"
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: pai-gateway
+  author: PAI Project
+  category: Development
+  description:
+    en_us: |
+      PAI Services Gateway provides standalone intelligence services:
+      - Morning Brief: Aggregated market data and Ichimoku signals
+      - Daily Review: Automated end-of-day summary
+      - Quick Capture: CLI/API for instant insights
+  tagline:
+    en_us: Personal AI Infrastructure Services
+  tips:
+    before_install:
+      en_us: |
+        Ensure port 4001 is available.
+        Configure webhooks in /DATA/AppData/pai/config/services.yaml
+  index: /api/health
+  port_map: "4001"

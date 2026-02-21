@@ -1,0 +1,51 @@
+# PAI Services Gateway Configuration
+# Copy to services.yaml and customize
+
+server:
+  port: 4001
+
+schedule:
+  morning_brief: "0 7 * * *"    # 7:00 AM daily
+  daily_review: "0 22 * * *"    # 10:00 PM daily
+
+webhooks:
+  enabled: true
+  targets:
+    # ntfy.sh - simple push notifications
+    - type: ntfy
+      url: https://ntfy.sh/your-topic
+      priority: default  # min, low, default, high, urgent
+
+    # Telegram (requires bot token and chat ID in .env)
+    # - type: telegram
+    #   bot_token: ${TELEGRAM_BOT_TOKEN}
+    #   chat_id: ${TELEGRAM_CHAT_ID}
+
+    # Discord webhook
+    # - type: discord
+    #   url: ${DISCORD_WEBHOOK_URL}
+
+archive:
+  enabled: true
+  path: ${PAI_DIR}/briefs
+
+sources:
+  ichimoku:
+    # Use container name when running in Docker, localhost when running locally
+    url: http://ichimoku-radar:5181/api/signals
+    timeout: 5000  # ms
+  market:
+    # CoinGecko asset IDs
+    assets:
+      - bitcoin
+      - ethereum
+      - solana
+      - jupiter-exchange-solana
+    timeout: 10000  # ms
+  history:
+    path: ${PAI_DIR}/history/raw-outputs
+
+captures:
+  path: ${PAI_DIR}/history/captures
+
+timezone: America/Los_Angeles

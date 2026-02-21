@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+bun.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Config with secrets
+config/services.yaml
+
+# Build artifacts
+dist/
+*.tgz
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Docker
+.docker/
+
+# Test artifacts
+coverage/
+.nyc_output/
