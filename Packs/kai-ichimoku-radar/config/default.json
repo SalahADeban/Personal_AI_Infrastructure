@@ -1,0 +1,47 @@
+{
+  "watchlist": [
+    {
+      "symbol": "BTC",
+      "name": "Bitcoin",
+      "type": "crypto",
+      "coingeckoId": "bitcoin"
+    },
+    {
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "type": "crypto",
+      "coingeckoId": "ethereum"
+    },
+    {
+      "symbol": "SOL",
+      "name": "Solana",
+      "type": "crypto",
+      "coingeckoId": "solana"
+    },
+    {
+      "symbol": "JUP",
+      "name": "Jupiter",
+      "type": "crypto",
+      "coingeckoId": "jupiter-exchange-solana"
+    },
+    {
+      "symbol": "TSLA",
+      "name": "Tesla",
+      "type": "stock",
+      "yahooSymbol": "TSLA"
+    }
+  ],
+  "timeframes": [
+    "1D",
+    "1M"
+  ],
+  "webhookUrl": "",
+  "refreshIntervals": {
+    "daily": 14400000,
+    "monthly": 86400000
+  },
+  "signalThresholds": {
+    "crossingZero": true,
+    "magnitude": 50
+  }
+}

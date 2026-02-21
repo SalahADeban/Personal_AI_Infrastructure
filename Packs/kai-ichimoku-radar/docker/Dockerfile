@@ -14,7 +14,7 @@ RUN bun install --frozen-lockfile || bun install
 # Copy source
 COPY src/ ./src/
 COPY public/ ./public/
-COPY data/config.json ./data/
+COPY config/default.json ./data/config.json
 
 # Production image
 FROM oven/bun:1-alpine
