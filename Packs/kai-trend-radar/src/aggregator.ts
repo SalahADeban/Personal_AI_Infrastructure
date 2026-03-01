@@ -13,6 +13,7 @@ import type {
   CollectorResult,
   SourceTier,
   TimelinePoint,
+  EnhancedTopic,
 } from './types';
 import {
   loadMentions,
@@ -27,6 +28,15 @@ import {
 import { collectAll } from './collectors';
 import { normalizeEntityName, getEntityCategory } from './extractor';
 import { aggregateSentiment, detectSentimentTrend } from './sentiment';
+
+// QuantCore Integration
+import {
+  analyzeTopicQuant,
+  cleanupStaleFilters,
+} from './quantcore-integration';
+
+// Enable/disable QuantCore features
+const QUANTCORE_ENABLED = true;
 
 // Minimum mentions to be considered a topic
 const MIN_MENTIONS = 2;
@@ -454,11 +464,55 @@ export function aggregateTopics(mentions: Mention[]): Topic[] {
   // Limit to max topics
   const trimmed = topics.slice(0, MAX_TOPICS);
 
+  // QuantCore Analysis
+  if (QUANTCORE_ENABLED) {
+    const activeTopics = new Set<string>();
+
+    for (const topic of trimmed) {
+      activeTopics.add(topic.normalizedName);
+
+      try {
+        const timeline = topic.timeline || [];
+        const quantAnalysis = analyzeTopicQuant(topic, timeline);
+
+        // Attach QuantCore analysis to topic
+        (topic as EnhancedTopic).quantAnalysis = quantAnalysis;
+
+        // Boost score for high viral probability anomalies
+        if (quantAnalysis.anomaly.isAnomaly && quantAnalysis.anomaly.anomalyType === 'spike') {
+          topic.score = Math.round(topic.score * (1 + quantAnalysis.anomaly.anomalyScore * 0.3));
+        }
+
+        // Log interesting findings
+        if (quantAnalysis.viralPrediction.probability > 0.5) {
+          console.log(`[QuantCore] ${topic.name}: viral prob ${(quantAnalysis.viralPrediction.probability * 100).toFixed(0)}% (${quantAnalysis.viralPrediction.spreadPattern})`);
+        }
+        if (quantAnalysis.anomaly.isAnomaly) {
+          console.log(`[QuantCore] ${topic.name}: ANOMALY detected (${quantAnalysis.anomaly.anomalyType}, score=${quantAnalysis.anomaly.anomalyScore.toFixed(2)})`);
+        }
+      } catch (err) {
+        console.error(`[QuantCore] Error analyzing ${topic.name}:`, err);
+      }
+    }
+
+    // Cleanup stale filters
+    cleanupStaleFilters(activeTopics);
+  }
+
+  // Re-sort after QuantCore score adjustments
+  trimmed.sort((a, b) => b.score - a.score);
+
   // Log stats
   const earlySignals = trimmed.filter(t => t.isEarlySignal);
   const crossPlatform = trimmed.filter(t => t.isCrossPlatform);
+  const anomalies = trimmed.filter(t => (t as EnhancedTopic).quantAnalysis?.anomaly.isAnomaly);
+  const highViral = trimmed.filter(t => ((t as EnhancedTopic).quantAnalysis?.viralPrediction.probability || 0) > 0.5);
+
   console.log(`[Aggregator] Generated ${trimmed.length} topics from ${entityMap.size} entities`);
   console.log(`[Aggregator] Early signals: ${earlySignals.length} | Cross-platform: ${crossPlatform.length}`);
+  if (QUANTCORE_ENABLED) {
+    console.log(`[Aggregator] Anomalies: ${anomalies.length} | High viral prob: ${highViral.length}`);
+  }
 
   return trimmed;
 }

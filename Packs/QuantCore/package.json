@@ -1,0 +1,26 @@
+{
+  "name": "quantcore",
+  "version": "1.0.0",
+  "description": "Quantitative simulation engine for prediction markets and trading",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "bun test",
+    "build": "bun build src/index.ts --outdir=dist --target=node",
+    "demo": "bun run src/demo.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "keywords": [
+    "monte-carlo",
+    "particle-filter",
+    "copula",
+    "quantitative-finance",
+    "trading",
+    "simulation"
+  ],
+  "author": "Salah Deban",
+  "license": "MIT"
+}

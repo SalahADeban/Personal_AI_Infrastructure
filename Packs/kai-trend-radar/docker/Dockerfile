@@ -3,14 +3,17 @@ FROM oven/bun:1-alpine
 WORKDIR /app
 
 # Copy package files first for better caching
-COPY package.json bun.lock* ./
+COPY kai-trend-radar/package.json kai-trend-radar/bun.lock* ./
 
 # Install production dependencies
 RUN bun install --production
 
+# Copy QuantCore dependency (for quantitative analysis)
+COPY QuantCore/ ./QuantCore/
+
 # Copy source and public assets
-COPY src/ ./src/
-COPY public/ ./public/
+COPY kai-trend-radar/src/ ./src/
+COPY kai-trend-radar/public/ ./public/
 
 # Data directory for persistence
 ENV DATA_DIR=/data

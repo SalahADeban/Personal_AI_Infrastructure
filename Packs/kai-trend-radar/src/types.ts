@@ -231,3 +231,56 @@ export const SOURCES: SourceMeta[] = [
   { id: 'verge', name: 'The Verge', icon: '🟣', color: '#E80C7A' },
   { id: 'arstechnica', name: 'Ars Technica', icon: '🟤', color: '#FF4E00' },
 ];
+
+// ============ QUANTCORE TYPES ============
+
+export type TrendPhase = 'discovery' | 'growth' | 'peak' | 'saturation' | 'decline';
+
+export interface ViralPrediction {
+  probability: number;         // 0-1 probability of going viral
+  confidence: number;          // Confidence interval width
+  expectedPeak: string | null; // ISO timestamp of expected peak
+  spreadPattern: 'explosive' | 'sustained' | 'organic' | 'declining';
+  riskOfFade: number;          // 0-1 probability of quick decline
+}
+
+export interface AnomalyResult {
+  isAnomaly: boolean;
+  anomalyScore: number;        // 0-1 strength of anomaly
+  expectedBaseline: number;    // Expected mention rate
+  deviation: number;           // Standard deviations from normal
+  anomalyType: 'spike' | 'drop' | 'normal';
+}
+
+export interface TrendRegime {
+  phase: TrendPhase;
+  phaseConfidence: number;     // 0-1 confidence in phase
+  phaseDuration: number;       // Hours in current phase
+  nextPhaseETA: number | null; // Hours until likely phase change
+  momentum: number;            // -1 to +1 momentum indicator
+}
+
+export interface TrendForecast {
+  points: ForecastPoint[];
+  peakTime: string | null;
+  expectedDuration: number;    // Hours until 50% decline
+  confidence: { lower: number[]; upper: number[] };
+}
+
+export interface ForecastPoint {
+  timestamp: string;
+  mentionCount: number;
+  isForecasted: boolean;
+}
+
+export interface QuantAnalysis {
+  viralPrediction: ViralPrediction;
+  anomaly: AnomalyResult;
+  regime: TrendRegime;
+  forecast: TrendForecast | null;
+}
+
+// Enhanced topic with QuantCore analysis
+export interface EnhancedTopic extends Topic {
+  quantAnalysis?: QuantAnalysis;
+}
