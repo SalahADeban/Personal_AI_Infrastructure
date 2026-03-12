@@ -1,0 +1,185 @@
+# /etc/config/network
+# OpenWrt Network Configuration - VLAN Segmentation
+# Router: ASUS RT-AC1200
+#
+# VLAN Layout:
+#   VLAN 1:  Management (10.0.1.0/24)
+#   VLAN 10: Trusted LAN (10.0.10.0/24) - LAN1 port
+#   VLAN 20: Servers (10.0.20.0/24) - LAN2 port
+#   VLAN 30: IoT (10.0.30.0/24) - LAN3 port
+#   VLAN 40: Guest (10.0.40.0/24) - WiFi only
+
+config interface 'loopback'
+    option device 'lo'
+    option proto 'static'
+    option ipaddr '127.0.0.1'
+    option netmask '255.0.0.0'
+
+# WAN Interface
+config interface 'wan'
+    option device 'wan'
+    option proto 'dhcp'
+
+config interface 'wan6'
+    option device 'wan'
+    option proto 'dhcpv6'
+
+# =============================================================================
+# VLAN Switch Configuration (for switch-based routers)
+# NOTE: Adjust port numbers based on your specific router model
+# ASUS RT-AC1200 typically uses: CPU=0, WAN=5, LAN1-4=1-4
+# =============================================================================
+
+config device
+    option name 'br-lan'
+    option type 'bridge'
+    list ports 'lan1'
+    list ports 'lan2'
+    list ports 'lan3'
+    list ports 'lan4'
+
+# If your OpenWrt uses swconfig (older style), use this instead:
+# config switch
+#     option name 'switch0'
+#     option reset '1'
+#     option enable_vlan '1'
+#
+# config switch_vlan
+#     option device 'switch0'
+#     option vlan '1'
+#     option ports '0t 4'
+#     option description 'Management'
+#
+# config switch_vlan
+#     option device 'switch0'
+#     option vlan '10'
+#     option ports '0t 1'
+#     option description 'Trusted'
+#
+# config switch_vlan
+#     option device 'switch0'
+#     option vlan '20'
+#     option ports '0t 2'
+#     option description 'Servers'
+#
+# config switch_vlan
+#     option device 'switch0'
+#     option vlan '30'
+#     option ports '0t 3'
+#     option description 'IoT'
+
+# =============================================================================
+# DSA-based VLAN Configuration (OpenWrt 21.02+)
+# =============================================================================
+
+# VLAN filtering on bridge
+config device
+    option name 'br-lan'
+    option type 'bridge'
+    option vlan_filtering '1'
+
+# VLAN 10 - Trusted (LAN1 - Nest WiFi)
+config bridge-vlan
+    option device 'br-lan'
+    option vlan '10'
+    list ports 'lan1:u*'
+
+config device
+    option name 'br-lan.10'
+    option type '8021q'
+    option ifname 'br-lan'
+    option vid '10'
+
+# VLAN 20 - Servers (LAN2)
+config bridge-vlan
+    option device 'br-lan'
+    option vlan '20'
+    list ports 'lan2:u*'
+
+config device
+    option name 'br-lan.20'
+    option type '8021q'
+    option ifname 'br-lan'
+    option vid '20'
+
+# VLAN 30 - IoT (LAN3)
+config bridge-vlan
+    option device 'br-lan'
+    option vlan '30'
+    list ports 'lan3:u*'
+
+config device
+    option name 'br-lan.30'
+    option type '8021q'
+    option ifname 'br-lan'
+    option vid '30'
+
+# VLAN 40 - Guest (WiFi only, no physical port)
+config device
+    option name 'br-lan.40'
+    option type '8021q'
+    option ifname 'br-lan'
+    option vid '40'
+
+# =============================================================================
+# Interface Definitions
+# =============================================================================
+
+# Management Interface (for router access)
+config interface 'mgmt'
+    option device 'br-lan'
+    option proto 'static'
+    option ipaddr '10.0.1.1'
+    option netmask '255.255.255.0'
+
+# Trusted LAN Interface (VLAN 10)
+config interface 'lan'
+    option device 'br-lan.10'
+    option proto 'static'
+    option ipaddr '10.0.10.1'
+    option netmask '255.255.255.0'
+
+# Servers Interface (VLAN 20)
+config interface 'servers'
+    option device 'br-lan.20'
+    option proto 'static'
+    option ipaddr '10.0.20.1'
+    option netmask '255.255.255.0'
+
+# IoT Interface (VLAN 30)
+config interface 'iot'
+    option device 'br-lan.30'
+    option proto 'static'
+    option ipaddr '10.0.30.1'
+    option netmask '255.255.255.0'
+
+# Guest Interface (VLAN 40)
+config interface 'guest'
+    option device 'br-lan.40'
+    option proto 'static'
+    option ipaddr '10.0.40.1'
+    option netmask '255.255.255.0'
+
+# =============================================================================
+# WireGuard VPN Interface
+# =============================================================================
+
+config interface 'wg0'
+    option proto 'wireguard'
+    option private_key 'REPLACE_WITH_SERVER_PRIVATE_KEY'
+    list addresses '10.0.99.1/24'
+    option listen_port '51820'
+
+# VPN Peer - Phone
+config wireguard_wg0
+    option description 'Phone'
+    option public_key 'REPLACE_WITH_PHONE_PUBLIC_KEY'
+    list allowed_ips '10.0.99.2/32'
+    option persistent_keepalive '25'
+
+# VPN Peer - Laptop
+config wireguard_wg0
+    option description 'Laptop'
+    option public_key 'REPLACE_WITH_LAPTOP_PUBLIC_KEY'
+    list allowed_ips '10.0.99.3/32'
+    option persistent_keepalive '25'

@@ -1,0 +1,35 @@
+services:
+  pai-observability:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: pai-observability:local
+    container_name: pai-observability
+    ports:
+      - "4000:4000"
+    volumes:
+      - pai-data:/data
+    environment:
+      - PAI_DIR=/data
+      - STATIC_DIR=/app/public
+    restart: unless-stopped
+
+  syncthing:
+    image: syncthing/syncthing:latest
+    container_name: pai-syncthing
+    hostname: pai-casaos
+    ports:
+      - "8384:8384"   # Web UI
+      - "22000:22000/tcp"  # Sync protocol
+      - "22000:22000/udp"  # Sync protocol (QUIC)
+    volumes:
+      - syncthing-config:/var/syncthing/config
+      - pai-data:/var/syncthing/pai-data
+    environment:
+      - PUID=1000
+      - PGID=1000
+    restart: unless-stopped
+
+volumes:
+  pai-data:
+  syncthing-config:

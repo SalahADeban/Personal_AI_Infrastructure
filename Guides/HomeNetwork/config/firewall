@@ -1,0 +1,286 @@
+# /etc/config/firewall
+# OpenWrt Firewall Configuration - Network Segmentation
+#
+# Zone Policy Summary:
+#   wan     -> REJECT input, ACCEPT output, REJECT forward
+#   lan     -> ACCEPT all (trusted devices)
+#   servers -> ACCEPT input, ACCEPT output, REJECT forward (unless allowed)
+#   iot     -> REJECT input, ACCEPT output, REJECT forward (isolated)
+#   guest   -> REJECT input, ACCEPT output, REJECT forward (internet only)
+#   vpn     -> ACCEPT all (trusted remote access)
+
+config defaults
+    option syn_flood '1'
+    option input 'ACCEPT'
+    option output 'ACCEPT'
+    option forward 'REJECT'
+
+# =============================================================================
+# Zones
+# =============================================================================
+
+# WAN Zone
+config zone
+    option name 'wan'
+    option input 'REJECT'
+    option output 'ACCEPT'
+    option forward 'REJECT'
+    option masq '1'
+    option mtu_fix '1'
+    list network 'wan'
+    list network 'wan6'
+
+# Trusted LAN Zone (VLAN 10)
+config zone
+    option name 'lan'
+    option input 'ACCEPT'
+    option output 'ACCEPT'
+    option forward 'ACCEPT'
+    list network 'lan'
+
+# Servers Zone (VLAN 20)
+config zone
+    option name 'servers'
+    option input 'ACCEPT'
+    option output 'ACCEPT'
+    option forward 'REJECT'
+    list network 'servers'
+
+# IoT Zone (VLAN 30)
+config zone
+    option name 'iot'
+    option input 'REJECT'
+    option output 'ACCEPT'
+    option forward 'REJECT'
+    list network 'iot'
+
+# Guest Zone (VLAN 40)
+config zone
+    option name 'guest'
+    option input 'REJECT'
+    option output 'ACCEPT'
+    option forward 'REJECT'
+    list network 'guest'
+
+# VPN Zone (WireGuard)
+config zone
+    option name 'vpn'
+    option input 'ACCEPT'
+    option output 'ACCEPT'
+    option forward 'ACCEPT'
+    list network 'wg0'
+
+# Management Zone
+config zone
+    option name 'mgmt'
+    option input 'ACCEPT'
+    option output 'ACCEPT'
+    option forward 'REJECT'
+    list network 'mgmt'
+
+# =============================================================================
+# Zone Forwarding
+# =============================================================================
+
+# LAN (Trusted) -> WAN (Internet access)
+config forwarding
+    option src 'lan'
+    option dest 'wan'
+
+# LAN (Trusted) -> Servers (Access services)
+config forwarding
+    option src 'lan'
+    option dest 'servers'
+
+# LAN (Trusted) -> IoT (Manage IoT devices)
+config forwarding
+    option src 'lan'
+    option dest 'iot'
+
+# Servers -> WAN (Internet access for updates, APIs)
+config forwarding
+    option src 'servers'
+    option dest 'wan'
+
+# Servers -> LAN (Allow Plex to stream to trusted devices)
+config forwarding
+    option src 'servers'
+    option dest 'lan'
+
+# IoT -> WAN (Internet access for cloud services)
+config forwarding
+    option src 'iot'
+    option dest 'wan'
+
+# Guest -> WAN (Internet only)
+config forwarding
+    option src 'guest'
+    option dest 'wan'
+
+# VPN -> All zones (Full access when connected remotely)
+config forwarding
+    option src 'vpn'
+    option dest 'wan'
+
+config forwarding
+    option src 'vpn'
+    option dest 'lan'
+
+config forwarding
+    option src 'vpn'
+    option dest 'servers'
+
+config forwarding
+    option src 'vpn'
+    option dest 'iot'
+
+# =============================================================================
+# Traffic Rules
+# =============================================================================
+
+# Allow DHCP on IoT zone
+config rule
+    option name 'Allow-IoT-DHCP'
+    option src 'iot'
+    option proto 'udp'
+    option dest_port '67-68'
+    option target 'ACCEPT'
+
+# Allow DHCP on Guest zone
+config rule
+    option name 'Allow-Guest-DHCP'
+    option src 'guest'
+    option proto 'udp'
+    option dest_port '67-68'
+    option target 'ACCEPT'
+
+# Allow DNS on IoT zone
+config rule
+    option name 'Allow-IoT-DNS'
+    option src 'iot'
+    option proto 'udp'
+    option dest_port '53'
+    option target 'ACCEPT'
+
+# Allow DNS on Guest zone
+config rule
+    option name 'Allow-Guest-DNS'
+    option src 'guest'
+    option proto 'udp'
+    option dest_port '53'
+    option target 'ACCEPT'
+
+# Allow WireGuard from WAN
+config rule
+    option name 'Allow-WireGuard'
+    option src 'wan'
+    option proto 'udp'
+    option dest_port '51820'
+    option target 'ACCEPT'
+
+# Allow ICMP (ping) from LAN for diagnostics
+config rule
+    option name 'Allow-Ping-LAN'
+    option src 'lan'
+    option proto 'icmp'
+    option icmp_type 'echo-request'
+    option target 'ACCEPT'
+
+# Allow ICMP (ping) from VPN for diagnostics
+config rule
+    option name 'Allow-Ping-VPN'
+    option src 'vpn'
+    option proto 'icmp'
+    option icmp_type 'echo-request'
+    option target 'ACCEPT'
+
+# =============================================================================
+# IoT -> Home Assistant Exception
+# Allow IoT devices to communicate with Home Assistant only
+# =============================================================================
+
+config rule
+    option name 'IoT-to-HomeAssistant'
+    option src 'iot'
+    option dest 'servers'
+    option dest_ip '10.0.20.20'
+    option dest_port '8123'
+    option proto 'tcp'
+    option target 'ACCEPT'
+
+# Allow mDNS/Bonjour for device discovery (optional, security tradeoff)
+# Uncomment if Home Assistant needs to discover IoT devices
+# config rule
+#     option name 'Allow-IoT-mDNS'
+#     option src 'iot'
+#     option dest 'servers'
+#     option dest_ip '10.0.20.20'
+#     option dest_port '5353'
+#     option proto 'udp'
+#     option target 'ACCEPT'
+
+# =============================================================================
+# Block Rules (Explicit Denies for Logging)
+# =============================================================================
+
+# Block IoT -> LAN (log attempts)
+config rule
+    option name 'Block-IoT-to-LAN'
+    option src 'iot'
+    option dest 'lan'
+    option target 'REJECT'
+    option log '1'
+    option log_prefix 'IOT-TO-LAN-BLOCKED: '
+
+# Block IoT -> Servers (except Home Assistant above)
+config rule
+    option name 'Block-IoT-to-Servers'
+    option src 'iot'
+    option dest 'servers'
+    option target 'REJECT'
+    option log '1'
+    option log_prefix 'IOT-TO-SERVERS-BLOCKED: '
+
+# Block Guest -> LAN
+config rule
+    option name 'Block-Guest-to-LAN'
+    option src 'guest'
+    option dest 'lan'
+    option target 'REJECT'
+
+# Block Guest -> Servers
+config rule
+    option name 'Block-Guest-to-Servers'
+    option src 'guest'
+    option dest 'servers'
+    option target 'REJECT'
+
+# Block Guest -> IoT
+config rule
+    option name 'Block-Guest-to-IoT'
+    option src 'guest'
+    option dest 'iot'
+    option target 'REJECT'
+
+# =============================================================================
+# Port Forwards (Optional - for external access)
+# Only enable if you need external access without VPN
+# =============================================================================
+
+# Example: Forward Plex to server (NOT recommended - use VPN instead)
+# config redirect
+#     option name 'Plex-External'
+#     option src 'wan'
+#     option src_dport '32400'
+#     option dest 'servers'
+#     option dest_ip '10.0.20.10'
+#     option dest_port '32400'
+#     option proto 'tcp'
+#     option target 'DNAT'
+
+# =============================================================================
+# Includes
+# =============================================================================
+
+config include
+    option path '/etc/firewall.user'

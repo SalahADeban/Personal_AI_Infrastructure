@@ -1,0 +1,87 @@
+# /etc/config/wireless
+# OpenWrt Wireless Configuration
+#
+# WiFi Strategy:
+#   - 2.4GHz Radio: IoT devices (VLAN 30) - most IoT only supports 2.4GHz
+#   - 5GHz Radio: Disabled (Nest WiFi handles trusted devices)
+#   - Nest WiFi plugged into LAN1 (VLAN 10) for trusted devices
+
+# =============================================================================
+# Radio Configuration
+# =============================================================================
+
+# 2.4GHz Radio (for IoT)
+config wifi-device 'radio0'
+    option type 'mac80211'
+    option path 'platform/10300000.wmac'
+    option channel '6'
+    option band '2g'
+    option htmode 'HT20'
+    option country 'US'
+    option cell_density '0'
+    # Reduce power to limit range (IoT doesn't need long range)
+    option txpower '17'
+
+# 5GHz Radio (disabled - Nest handles 5GHz)
+config wifi-device 'radio1'
+    option type 'mac80211'
+    option path 'pci0000:00/0000:00:00.0/0000:01:00.0'
+    option channel '36'
+    option band '5g'
+    option htmode 'VHT80'
+    option country 'US'
+    option disabled '1'
+
+# =============================================================================
+# IoT WiFi Network (VLAN 30)
+# =============================================================================
+
+config wifi-iface 'iot_wifi'
+    option device 'radio0'
+    option network 'iot'
+    option mode 'ap'
+    option ssid 'IoT-Network'
+    option encryption 'psk2'
+    option key 'REPLACE_WITH_STRONG_PASSWORD'
+    # Hide SSID (optional - prevents casual discovery)
+    option hidden '0'
+    # Isolate clients from each other
+    option isolate '1'
+    # Disable WMM for better IoT compatibility
+    option wmm '0'
+    # Limit max associated clients
+    option maxassoc '20'
+
+# =============================================================================
+# Guest WiFi Network (VLAN 40) - Optional
+# =============================================================================
+
+config wifi-iface 'guest_wifi'
+    option device 'radio0'
+    option network 'guest'
+    option mode 'ap'
+    option ssid 'Guest-Network'
+    option encryption 'psk2'
+    option key 'REPLACE_WITH_GUEST_PASSWORD'
+    option hidden '0'
+    option isolate '1'
+    option disabled '1'
+
+# =============================================================================
+# Notes
+# =============================================================================
+
+# To enable 5GHz on OpenWrt (if you want to replace Nest in future):
+# 1. Set 'disabled' to '0' on radio1
+# 2. Add a wifi-iface for trusted network on radio1
+# 3. Assign it to 'lan' network (VLAN 10)
+#
+# Example:
+# config wifi-iface 'trusted_5g'
+#     option device 'radio1'
+#     option network 'lan'
+#     option mode 'ap'
+#     option ssid 'Home-5G'
+#     option encryption 'psk2+ccmp'
+#     option key 'REPLACE_WITH_STRONG_PASSWORD'
+#     option ieee80211w '1'
